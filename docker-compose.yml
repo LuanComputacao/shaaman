@@ -46,10 +46,46 @@ services:
         networks: 
             - code-network
 
+
+    web-site:
+        image: nginx:alpine
+        ports:
+            - "8081:80"
+        volumes:
+            - ./site:/code
+            - ./site.conf:/etc/nginx/conf.d/site.conf
+            - templates:/tmp/twig/site
+        command: >
+            /bin/sh -c "rm -f /etc/nginx/conf.d/default.conf 
+            && exec nginx -g 'daemon off;'
+            && mkdir -p /tmp/twig/
+            && chown -R nginx: /tmp/twig/
+            && chmod -R 755 /tmp/twig
+            && rm -rf /tmp/twig/*
+            "
+        links:
+            - php-site
+        networks:
+            - site-network
+        depends_on:
+            - php-site
+    
+    php-site:
+        image: php:7-fpm-alpine
+        volumes:
+            - ./site:/code
+            - templates:/tmp/twig/site
+        networks:
+            - site-network
+        depends_on: 
+            - mysql
+
 volumes:
     mysql:
     templates:
 
 networks:
     code-network:
+        driver: bridge
+    site-network:
         driver: bridge
