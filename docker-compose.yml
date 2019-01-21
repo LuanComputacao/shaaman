@@ -1,91 +1,107 @@
 version: "3"
 
 services:
-    web-grooty:
-        image: nginx:alpine
+    grooty-web:
+        build:
+            context: ./grooty/
+            dockerfile: nginx.Dockerfile
         ports:
             - "8080:80"
         volumes:
             - ./grooty:/code
             - ./grooty.conf:/etc/nginx/conf.d/site.conf
-            - templates:/tmp/twig/grooty
-        command: >
-            /bin/sh -c "rm -f /etc/nginx/conf.d/default.conf 
-            && exec nginx -g 'daemon off;'
-            && mkdir -p /tmp/twig/
-            && chown -R nginx: /tmp/twig/
-            && chmod -R 755 /tmp/twig
-            && rm -rf /tmp/twig/*
-            "
+            - templates-grooty:/tmp/twig/grooty
         links:
-            - php-grooty
+            - grooty-php
         networks:
-            - code-network
+            - grooty-network
         depends_on:
-            - php-grooty
+            - grooty-mysql
+            - grooty-php
     
-    php-grooty:
-        image: php:7-fpm-alpine
+    grooty-php:
+        build:
+            context: ./grooty/
+            dockerfile: php-fpm.Dockerfile
         volumes:
             - ./grooty:/code
-            - templates:/tmp/twig/grooty
+            - templates-grooty:/tmp/twig/grooty
         networks:
-            - code-network
+            - grooty-network
         depends_on: 
-            - mysql
+            - grooty-mysql
 
-    mysql:
-        image: mysql
+    grooty-mysql:
+        build:
+            context: ./grooty/
+            dockerfile: mysql.Dockerfile
         volumes:
-            - mysql:/var/lib/mysql
+            - mysql-grooty:/var/lib/mysql
         command: --default-authentication-plugin=mysql_native_password
         restart: always
         environment:
             - MYSQL_ROOT_PASSWORD=shaaman
-            - MYSQL_DATABASE=shaaman
+            - MYSQL_DATABASE=grooty
+            - MYSQL_USER=grooty
+            - MYSQL_PASSWORD=grooty
         networks: 
-            - code-network
+            - grooty-network
 
-
-    web-site:
-        image: nginx:alpine
+    site-web:
+        build:
+            context: ./site/
+            dockerfile: nginx.Dockerfile
         ports:
             - "8081:80"
         volumes:
             - ./site:/code
             - ./site.conf:/etc/nginx/conf.d/site.conf
-            - templates:/tmp/twig/site
-        command: >
-            /bin/sh -c "rm -f /etc/nginx/conf.d/default.conf 
-            && exec nginx -g 'daemon off;'
-            && mkdir -p /tmp/twig/
-            && chown -R nginx: /tmp/twig/
-            && chmod -R 755 /tmp/twig
-            && rm -rf /tmp/twig/*
-            "
+            - templates-site:/tmp/twig/site
         links:
-            - php-site
+            - site-php
         networks:
             - site-network
         depends_on:
-            - php-site
+            - site-php
+            - site-mysql
     
-    php-site:
-        image: php:7-fpm-alpine
+    site-php:
+        build:
+            context: ./site/
+            dockerfile: php-fpm.Dockerfile
         volumes:
             - ./site:/code
-            - templates:/tmp/twig/site
+            - templates-site:/tmp/twig/site
         networks:
             - site-network
         depends_on: 
-            - mysql
+            - site-mysql
+
+    site-mysql:
+        build:
+            context: ./site/
+            dockerfile: mysql.Dockerfile
+        volumes:
+            - mysql-site:/var/lib/mysql
+        command: --default-authentication-plugin=mysql_native_password
+        restart: always
+        environment:
+            - MYSQL_ROOT_PASSWORD=shaaman
+            - MYSQL_DATABASE=site
+            - MYSQL_USER=site
+            - MYSQL_PASSWORD=site
+        networks: 
+            - site-network
+
 
 volumes:
-    mysql:
-    templates:
+    mysql-grooty:
+    mysql-site:
+    templates-grooty:
+    templates-site:
 
 networks:
-    code-network:
+    grooty-network:
         driver: bridge
     site-network:
         driver: bridge
