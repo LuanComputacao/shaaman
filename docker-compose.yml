@@ -6,10 +6,10 @@ services:
             context: ./grooty/
             dockerfile: nginx.Dockerfile
         ports:
-            - "8080:80"
+            - "8082:80"
         volumes:
             - ./grooty:/code
-            - ./grooty.conf:/etc/nginx/conf.d/site.conf
+            - ./grooty/grooty.nginx.conf:/etc/nginx/conf.d/site.conf
             - templates-grooty:/tmp/twig/grooty
         links:
             - grooty-php
@@ -18,17 +18,18 @@ services:
         depends_on:
             - grooty-mysql
             - grooty-php
-    
+
     grooty-php:
         build:
             context: ./grooty/
             dockerfile: php-fpm.Dockerfile
         volumes:
-            - ./grooty:/code
+            - ./grooty/:/code
             - templates-grooty:/tmp/twig/grooty
+        command: /bin/sh -c "cd /code && composer install && php-fpm"
         networks:
             - grooty-network
-        depends_on: 
+        depends_on:
             - grooty-mysql
 
     grooty-mysql:
@@ -44,7 +45,7 @@ services:
             - MYSQL_DATABASE=grooty
             - MYSQL_USER=grooty
             - MYSQL_PASSWORD=grooty
-        networks: 
+        networks:
             - grooty-network
 
     site-web:
@@ -54,27 +55,28 @@ services:
         ports:
             - "8081:80"
         volumes:
-            - ./site:/code
-            - ./site.conf:/etc/nginx/conf.d/site.conf
+            - ./site/:/code
+            - ./site/site.nginx.conf:/etc/nginx/conf.d/site.conf
             - templates-site:/tmp/twig/site
         links:
             - site-php
         networks:
             - site-network
         depends_on:
-            - site-php
             - site-mysql
-    
+            - site-php
+
     site-php:
         build:
             context: ./site/
             dockerfile: php-fpm.Dockerfile
         volumes:
-            - ./site:/code
+            - ./site/:/code
             - templates-site:/tmp/twig/site
+        command: /bin/sh -c "cd /code && composer install && php-fpm"
         networks:
             - site-network
-        depends_on: 
+        depends_on:
             - site-mysql
 
     site-mysql:
@@ -90,7 +92,7 @@ services:
             - MYSQL_DATABASE=site
             - MYSQL_USER=site
             - MYSQL_PASSWORD=site
-        networks: 
+        networks:
             - site-network
 
 
