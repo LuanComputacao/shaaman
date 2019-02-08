@@ -2,6 +2,11 @@
 
 ## how to run
 
+* make the projects clones running the script
+```
+./clone.sh
+```
+
 * run the Docker Compose
 
 ```
