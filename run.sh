@@ -7,5 +7,5 @@ git clone git@github.com:anjelim/site.git
 
 cd shaaman/
 
-docker-compose up -d
+docker-compose up
 
