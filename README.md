@@ -2,6 +2,8 @@
 
 ## how to run
 
+* create a folder and enter into
+
 * make the projects clones running the script
 ```
 ./run.sh
