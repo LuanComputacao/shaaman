@@ -4,13 +4,7 @@
 
 * make the projects clones running the script
 ```
-./clone.sh
-```
-
-* run the Docker Compose
-
-```
-$ docker-compose up
+./run.sh
 ```
 
 * Then execute, in the same directory the following command, to starts the database
